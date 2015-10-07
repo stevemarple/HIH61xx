@@ -1,7 +1,7 @@
 #ifndef HIH61XX_H
 #define HIH61XX_H
 
-#define HIH61XX_VERSION "0.1.0"
+#define HIH61XX_VERSION "1.0.0"
 
 #include <SoftWire.h>
 #include <AsyncDelay.h>
