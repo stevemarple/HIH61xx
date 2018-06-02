@@ -2,13 +2,24 @@
 #include <HIH61xx.h>
 #include <AsyncDelay.h>
 
-HIH61xx hih;
+SoftWire sw(SDA, SCL);
+HIH61xx<SoftWire> hih(sw);
 AsyncDelay samplingInterval;
 
 void setup(void)
 {
+#if F_CPU >= 12000000UL
+    Serial.begin(115200);
+#else
 	Serial.begin(9600);
-	hih.initialise(A4, A5);
+#endif
+
+    // The pin numbers for SDA/SCL can be overridden at runtime.
+	// sw.setSda(sdaPin);
+	// sw.setScl(sclPin);
+	sw.begin();  // Sets up pin mode for SDA and SCL
+
+	hih.initialise();
 	samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
 
