@@ -5,18 +5,12 @@
 
 #define HIH61XX_DEFAULT_ADDRESS 0x27
 
-//#if HIH61XX_I2C_LIBRARY == Wire
-//#include <Wire.h>
-//#elif HIH61XX_I2C_LIBRARY == SoftWire
-//#include <SoftWire.h>
-//#else
-//#error "Unknown I2C library: " ## HIH61XX_I2C_LIBRARY
-//#endif
 
 #include <Wire.h>
-#include <SoftWire.h>
+//#include <SoftWire.h>
 
 #include <AsyncDelay.h>
+
 
 template <class T> class HIH61xx {
 //class HIH61xx {
@@ -56,7 +50,7 @@ public:
 	void start(void); // To include power-up (later), start sampling
 	void process(void); // Call often to process state machine
 	void finish(void); // Force completion and power-down
-	void timeoutDetected(void);
+	void errorDetected(void);
 
 private:
 	enum state_t {
@@ -162,10 +156,13 @@ void HIH61xx<T>::process(void)
 
 	case poweringUp:
 		if (_delay.isExpired()) {
-			uint8_t s = _i2c.start(defaultAddress, SoftWire::writeMode);
-			_i2c.stop();
-			if (s == SoftWire::timedOut)
-				timeoutDetected();
+		    _i2c.beginTransmission(defaultAddress);
+		    int errStatus;
+		    if ((errStatus = _i2c.endTransmission()) != 0) {
+		        Serial.print("Error when powering up: ");
+		        Serial.println(errStatus);
+				errorDetected();
+            }
 			else {
 				_delay.start(conversionDelay_ms, AsyncDelay::MILLIS);
 				_state = converting;
@@ -181,17 +178,19 @@ void HIH61xx<T>::process(void)
 
 	case reading:
 		{
-			uint8_t data[4];
-			if (_i2c.start(_address, SoftWire::readMode) ||
-				_i2c.readThenAck(data[0]) ||
-				_i2c.readThenAck(data[1]) ||
-				_i2c.readThenAck(data[2]) ||
-				_i2c.readThenNack(data[3])) {
-				    _i2c.stop();
-				    timeoutDetected();
-				    break;
+            const uint8_t bytesRequested = 4;
+            uint8_t data[bytesRequested];
+            int bytesRead;
+			if ((bytesRead = _i2c.requestFrom(_address, bytesRequested)) != bytesRequested) {
+			    Serial.print("Error when reading: ");
+			    Serial.println(bytesRead);
+			    errorDetected();
+                break;
 			}
-			_i2c.stop();
+			else {
+			    for (uint8_t i = 0; i < bytesRequested; ++i)
+			        data[i] = _i2c.read();
+			}
 			_status = data[0] >> 6;
 			uint16_t rawHumidity = ((((uint16_t)data[0] & 0x3F) << 8) |
 									(uint16_t)data[1]);
@@ -217,7 +216,7 @@ void HIH61xx<T>::process(void)
 template <class T>
 void HIH61xx<T>::finish(void)
 {
-	_i2c.stop(); // Release SDA and SCL
+	//_i2c.stop(); // Release SDA and SCL
 	if (_powerPin != 255)
 		digitalWrite(_powerPin, LOW);
 	_state = finished;
@@ -225,7 +224,7 @@ void HIH61xx<T>::finish(void)
 
 
 template <class T>
-void HIH61xx<T>::timeoutDetected(void)
+void HIH61xx<T>::errorDetected(void)
 {
 	finish();
 	_ambientTemp = 32767;

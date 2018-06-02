@@ -6,6 +6,10 @@ SoftWire sw(SDA, SCL);
 HIH61xx<SoftWire> hih(sw);
 AsyncDelay samplingInterval;
 
+// Only a very small RX buffer is needed
+uint8_t i2cRxBuffer[4];
+uint8_t i2cTxBuffer[4];
+
 void setup(void)
 {
 #if F_CPU >= 12000000UL
@@ -17,6 +21,14 @@ void setup(void)
     // The pin numbers for SDA/SCL can be overridden at runtime.
 	// sw.setSda(sdaPin);
 	// sw.setScl(sclPin);
+
+	sw.setRxBuffer(i2cRxBuffer, sizeof(i2cRxBuffer));
+	//sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
+
+	// HIH61xx doesn't need a TX buffer, but other I2C devices probably will.
+	//sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
+	sw.setTxBuffer(NULL, 0);
+
 	sw.begin();  // Sets up pin mode for SDA and SCL
 
 	hih.initialise();
@@ -31,7 +43,7 @@ void loop(void)
 		hih.start();
 		printed = false;
 		samplingInterval.repeat();
-		Serial.println("Sampling started");
+		Serial.println("Sampling started (using SoftWire library)");
 	}
 
 	hih.process();
