@@ -5,16 +5,20 @@
 
 #define HIH61XX_DEFAULT_ADDRESS 0x27
 
-
-#include <Wire.h>
-//#include <SoftWire.h>
-
 #include <AsyncDelay.h>
 
 
 template <class T> class HIH61xx {
-//class HIH61xx {
 public:
+	enum status_t {
+		statusNormal = 0,    // Defined by HIH61xx device
+		statusStaleData = 1, // Defined by HIH61xx device
+		statusCmdMode = 2,   // Defined by HIH61xx device
+		statusNotUsed = 3,   // Defined by HIH61xx device
+		statusUninitialised = 4,
+		statusTimeout = 5,
+	};
+
 	static const uint8_t defaultAddress = HIH61XX_DEFAULT_ADDRESS;
 	static const uint8_t powerUpDelay_ms = 75; // Data sheet indicates 60ms
 	static const uint8_t conversionDelay_ms = 45; // "Typically 36.65ms"
@@ -44,13 +48,14 @@ public:
 	    return (_state == off || _state == finished);
 	}
 
-	bool initialise(uint8_t sda, uint8_t scl, uint8_t power = 255);
 	bool initialise(uint8_t power = 255);
 
 	void start(void); // To include power-up (later), start sampling
 	void process(void); // Call often to process state machine
 	void finish(void); // Force completion and power-down
-	void errorDetected(void);
+
+    bool read(void); // Simple blocking read
+
 
 private:
 	enum state_t {
@@ -62,15 +67,6 @@ private:
 		finished, // Results read
 	};
 
-	enum status_t {
-		statusNormal = 0,    // Defined by HIH61xx device
-		statusStaleData = 1, // Defined by HIH61xx device
-		statusCmdMode = 2,   // Defined by HIH61xx device
-		statusNotUsed = 3,   // Defined by HIH61xx device
-		statusUninitialised = 4,
-		statusTimeout = 5,
-	};
-
 	uint8_t _address;
 	uint8_t _powerPin;
 	state_t _state;
@@ -78,47 +74,26 @@ private:
 
 	int16_t _ambientTemp;
 	uint16_t _relHumidity;
-	uint8_t _status;
+	status_t _status;
 	AsyncDelay _delay;
+
+	void errorDetected(void);
 };
 
 
-template <class T>
-HIH61xx<T>::HIH61xx(T &i2c) : _address(defaultAddress),
-						 _powerPin(255),
-						 _state(off),
-						 _i2c(i2c),
-						 _ambientTemp(32767),
-						 _relHumidity(65535),
-						 _status(statusUninitialised)
+template <class T>  IH61xx<T>::HIH61xx(T &i2c) : _address(defaultAddress),
+                                                 _powerPin(255),
+                                                 _state(off),
+                                                 _i2c(i2c),
+                                                 _ambientTemp(32767),
+                                                 _relHumidity(65535),
+                                                 _status(statusUninitialised)
 {
 	;
 }
 
 
-template <class T>
-bool HIH61xx<T>::initialise(uint8_t sdaPin, uint8_t sclPin, uint8_t powerPin)
-{
-	_i2c.setSda(sdaPin);
-	_i2c.setScl(sclPin);
-	_i2c.begin();  // Sets up pin mode for SDA and SCL
-	_powerPin = powerPin;
-	if (_powerPin != 255) {
-		pinMode(_powerPin, OUTPUT);
-		digitalWrite(_powerPin, LOW);
-	}
-	// TODO: check presence of HIH61xx
-
-	// Use the delay so that even when always on the power-up delay is
-	// observed from initialisation
-	_delay.start(powerUpDelay_ms, AsyncDelay::MILLIS);
-
-	return true;
-}
-
-
-template <class T>
-bool HIH61xx<T>::initialise(uint8_t powerPin)
+template <class T> bool HIH61xx<T>::initialise(uint8_t powerPin)
 {
 	_powerPin = powerPin;
 	if (_powerPin != 255) {
@@ -135,8 +110,7 @@ bool HIH61xx<T>::initialise(uint8_t powerPin)
 }
 
 
-template <class T>
-void HIH61xx<T>::start(void)
+template <class T> void HIH61xx<T>::start(void)
 {
 	if (_powerPin != 255) {
 		digitalWrite(_powerPin, HIGH);
@@ -146,8 +120,7 @@ void HIH61xx<T>::start(void)
 }
 
 
-template <class T>
-void HIH61xx<T>::process(void)
+template <class T> void HIH61xx<T>::process(void)
 {
 	switch (_state) {
 	case off:
@@ -213,8 +186,7 @@ void HIH61xx<T>::process(void)
 }
 
 
-template <class T>
-void HIH61xx<T>::finish(void)
+template <class T> void HIH61xx<T>::finish(void)
 {
 	//_i2c.stop(); // Release SDA and SCL
 	if (_powerPin != 255)
@@ -223,8 +195,16 @@ void HIH61xx<T>::finish(void)
 }
 
 
-template <class T>
-void HIH61xx<T>::errorDetected(void)
+template <class T> bool HIH61xx<T>::read(void)
+{
+    start();
+    while (!isFinished())
+        process();
+    return _status == statusNormal;
+}
+
+
+template <class T> void HIH61xx<T>::errorDetected(void)
 {
 	finish();
 	_ambientTemp = 32767;
