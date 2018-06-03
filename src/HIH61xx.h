@@ -81,7 +81,7 @@ private:
 };
 
 
-template <class T>  IH61xx<T>::HIH61xx(T &i2c) : _address(defaultAddress),
+template <class T> HIH61xx<T>::HIH61xx(T &i2c) : _address(defaultAddress),
                                                  _powerPin(255),
                                                  _state(off),
                                                  _i2c(i2c),
