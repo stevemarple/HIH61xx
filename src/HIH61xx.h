@@ -164,7 +164,7 @@ template <class T> void HIH61xx<T>::process(void)
 			    for (uint8_t i = 0; i < bytesRequested; ++i)
 			        data[i] = _i2c.read();
 			}
-			_status = data[0] >> 6;
+			_status = (status_t)(data[0] >> 6);
 			uint16_t rawHumidity = ((((uint16_t)data[0] & 0x3F) << 8) |
 									(uint16_t)data[1]);
 			uint16_t rawTemp = ((uint16_t)data[2] << 6) | ((uint16_t)data[3] >> 2);
