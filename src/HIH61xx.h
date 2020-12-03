@@ -23,8 +23,7 @@ public:
 	static const uint8_t powerUpDelay_ms = 75; // Data sheet indicates 60ms
 	static const uint8_t conversionDelay_ms = 45; // "Typically 36.65ms"
 
-	HIH61xx(T &i2c);
-	HIH61xx(T &i2c, uint8_t address);
+	HIH61xx(T &i2c, uint8_t address=HIH61XX_DEFAULT_ADDRESS);
 
 	inline int16_t getAmbientTemp(void) const {
     	return _ambientTemp;
@@ -82,11 +81,6 @@ private:
 };
 
 
-template <class T> HIH61xx<T>::HIH61xx(T &i2c) : HIH61xx(i2c, defaultAddress)
-{
-	;
-}
-
 template <class T> HIH61xx<T>::HIH61xx(T &i2c, uint8_t address) : _address(address),
                                                  _powerPin(255),
                                                  _state(off),
@@ -134,6 +128,8 @@ template <class T> void HIH61xx<T>::process(void)
 		    _i2c.beginTransmission(_address);
 		    int errStatus;
 		    if ((errStatus = _i2c.endTransmission()) != 0) {
+				Serial.print("Error when powering up: ");
+		        Serial.println(errStatus);
 				errorDetected();
             }
 			else {
@@ -155,6 +151,8 @@ template <class T> void HIH61xx<T>::process(void)
             uint8_t data[bytesRequested];
             int bytesRead;
 			if ((bytesRead = _i2c.requestFrom(_address, bytesRequested)) != bytesRequested) {
+				Serial.print("Error when reading: ");
+			    Serial.println(bytesRead);
 			    errorDetected();
                 break;
 			}
