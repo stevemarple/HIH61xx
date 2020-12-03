@@ -23,7 +23,7 @@ public:
 	static const uint8_t powerUpDelay_ms = 75; // Data sheet indicates 60ms
 	static const uint8_t conversionDelay_ms = 45; // "Typically 36.65ms"
 
-	HIH61xx(T &i2c, uint8_t address=HIH61XX_DEFAULT_ADDRESS);
+	HIH61xx(T &i2c, uint8_t address=defaultAddress);
 
 	inline int16_t getAmbientTemp(void) const {
     	return _ambientTemp;
