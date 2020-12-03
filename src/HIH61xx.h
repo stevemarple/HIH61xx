@@ -48,6 +48,14 @@ template <class T> class HIH61xx {
       return (_state == off || _state == finished);
     }
 
+	inline void setPowerUpErrorHandler(void (*handler)(HIH61xx& hih)) {
+		_powerUpErrorHandler = handler;
+	}
+
+	inline void setReadErrorHandler(void (*handler)(HIH61xx& hih)) {
+		_readErrorHandler = handler;
+	}
+
     void initialise(uint8_t power = 255);
 
     void start(void); // To include power-up (later), start sampling
@@ -77,6 +85,9 @@ template <class T> class HIH61xx {
     status_t _status;
     AsyncDelay _delay;
 
+	void (*_powerUpErrorHandler)(HIH61xx& hih);
+	void (*_readErrorHandler)(HIH61xx& hih);
+
     void errorDetected(void);
 };
 
@@ -87,7 +98,9 @@ template <class T> HIH61xx<T>::HIH61xx(T &i2c, uint8_t address) : _address(addre
   _i2c(i2c),
   _ambientTemp(32767),
   _relHumidity(65535),
-  _status(statusUninitialised)
+  _status(statusUninitialised),
+  _powerUpErrorHandler(nullptr),
+  _readErrorHandler(nullptr)
 {
   ;
 }
@@ -128,9 +141,10 @@ template <class T> void HIH61xx<T>::process(void)
         _i2c.beginTransmission(_address);
         int errStatus;
         if ((errStatus = _i2c.endTransmission()) != 0) {
-          Serial.print("Error when powering up: ");
-          Serial.println(errStatus);
           errorDetected();
+		  if (_powerUpErrorHandler) {
+			  _powerUpErrorHandler(*this);
+		  }
         }
         else {
           _delay.start(conversionDelay_ms, AsyncDelay::MILLIS);
@@ -151,9 +165,10 @@ template <class T> void HIH61xx<T>::process(void)
         uint8_t data[bytesRequested];
         int bytesRead;
         if ((bytesRead = _i2c.requestFrom(_address, bytesRequested)) != bytesRequested) {
-          Serial.print("Error when reading: ");
-          Serial.println(bytesRead);
           errorDetected();
+		  if (_readErrorHandler) {
+			  _readErrorHandler(*this);
+		  }
           break;
         }
         else {

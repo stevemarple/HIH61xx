@@ -11,6 +11,19 @@ HIH61xx<TwoWire> hih(Wire);
 
 AsyncDelay samplingInterval;
 
+
+void powerUpErrorHandler(HIH61xx<TwoWire>& hih)
+{
+  Serial.println("Error powering up HIH61xx device");
+}
+
+
+void readErrorHandler(HIH61xx<TwoWire>& hih)
+{
+  Serial.println("Error reading from HIH61xx device");
+}
+
+
 void setup(void)
 {
 #if F_CPU >= 12000000UL
@@ -22,6 +35,9 @@ void setup(void)
 
   Wire.begin();
 
+  // Set the handlers *before* calling initialise() in case something goes wrong
+  hih.setPowerUpErrorHandler(powerUpErrorHandler);
+  hih.setReadErrorHandler(readErrorHandler);
   hih.initialise();
   samplingInterval.start(3000, AsyncDelay::MILLIS);
 }

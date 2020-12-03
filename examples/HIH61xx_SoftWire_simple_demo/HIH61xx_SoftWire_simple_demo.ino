@@ -22,6 +22,19 @@ AsyncDelay samplingInterval;
 uint8_t i2cRxBuffer[4];
 uint8_t i2cTxBuffer[32];
 
+
+void powerUpErrorHandler(HIH61xx<SoftWire>& hih)
+{
+  Serial.println("Error powering up HIH61xx device");
+}
+
+
+void readErrorHandler(HIH61xx<SoftWire>& hih)
+{
+  Serial.println("Error reading from HIH61xx device");
+}
+
+
 void setup(void)
 {
 #if F_CPU >= 12000000UL
@@ -44,6 +57,9 @@ void setup(void)
 
   sw.begin();  // Sets up pin mode for SDA and SCL
 
+  // Set the handlers *before* calling initialise() in case something goes wrong
+  hih.setPowerUpErrorHandler(powerUpErrorHandler);
+  hih.setReadErrorHandler(readErrorHandler);
   hih.initialise();
   samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
