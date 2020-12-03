@@ -48,7 +48,7 @@ public:
 	    return (_state == off || _state == finished);
 	}
 
-	bool initialise(uint8_t power = 255);
+	void initialise(uint8_t power = 255);
 
 	void start(void); // To include power-up (later), start sampling
 	void process(void); // Call often to process state machine
@@ -93,7 +93,7 @@ template <class T> HIH61xx<T>::HIH61xx(T &i2c, uint8_t address) : _address(addre
 }
 
 
-template <class T> bool HIH61xx<T>::initialise(uint8_t powerPin)
+template <class T> void HIH61xx<T>::initialise(uint8_t powerPin)
 {
 	_powerPin = powerPin;
 	if (_powerPin != 255) {
@@ -102,7 +102,7 @@ template <class T> bool HIH61xx<T>::initialise(uint8_t powerPin)
 	}
 	_delay.start(powerUpDelay_ms, AsyncDelay::MILLIS);
 
-	return this->read();
+	return;
 }
 
 
