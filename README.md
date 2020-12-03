@@ -31,3 +31,10 @@ License
 
 The HIH61xx library is released under the GNU Lesser General Public
 License, version 2.1. See [LICENSE.txt](LICENSE.txt) for details.
+
+Contributors
+------------
+
+* Steve Marple
+* per1234
+* Giuseppe Pisano
