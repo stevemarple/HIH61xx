@@ -14,42 +14,42 @@ AsyncDelay samplingInterval;
 void setup(void)
 {
 #if F_CPU >= 12000000UL
-    Serial.begin(115200);
+  Serial.begin(115200);
 #else
-	Serial.begin(9600);
+  Serial.begin(9600);
 #endif
 
 
-	Wire.begin();
+  Wire.begin();
 
-	hih.initialise();
-	samplingInterval.start(3000, AsyncDelay::MILLIS);
+  hih.initialise();
+  samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
 
 
 bool printed = true;
 void loop(void)
 {
-	if (samplingInterval.isExpired() && !hih.isSampling()) {
-		hih.start();
-		printed = false;
-		samplingInterval.repeat();
-		Serial.println("Sampling started (using Wire library)");
-	}
+  if (samplingInterval.isExpired() && !hih.isSampling()) {
+    hih.start();
+    printed = false;
+    samplingInterval.repeat();
+    Serial.println("Sampling started (using Wire library)");
+  }
 
-	hih.process();
+  hih.process();
 
-	if (hih.isFinished() && !printed) {
-		printed = true;
-		// Print saved values
-		Serial.print("RH: ");
-		Serial.print(hih.getRelHumidity() / 100.0);
-		Serial.println(" %");
-		Serial.print("Ambient: ");
-		Serial.print(hih.getAmbientTemp() / 100.0);
-		Serial.println(" deg C");
-		Serial.print("Status: ");
-		Serial.println(hih.getStatus());
-	}
+  if (hih.isFinished() && !printed) {
+    printed = true;
+    // Print saved values
+    Serial.print("RH: ");
+    Serial.print(hih.getRelHumidity() / 100.0);
+    Serial.println(" %");
+    Serial.print("Ambient: ");
+    Serial.print(hih.getAmbientTemp() / 100.0);
+    Serial.println(" deg C");
+    Serial.print("Status: ");
+    Serial.println(hih.getStatus());
+  }
 
 }

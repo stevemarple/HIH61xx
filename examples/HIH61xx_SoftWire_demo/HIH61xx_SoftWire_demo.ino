@@ -24,53 +24,53 @@ uint8_t i2cTxBuffer[32];
 void setup(void)
 {
 #if F_CPU >= 12000000UL
-    Serial.begin(115200);
+  Serial.begin(115200);
 #else
-	Serial.begin(9600);
+  Serial.begin(9600);
 #endif
 
-    // The pin numbers for SDA/SCL can be overridden at runtime.
-	// sw.setSda(sdaPin);
-	// sw.setScl(sclPin);
+  // The pin numbers for SDA/SCL can be overridden at runtime.
+  // sw.setSda(sdaPin);
+  // sw.setScl(sclPin);
 
 
-	sw.setRxBuffer(i2cRxBuffer, sizeof(i2cRxBuffer));
-	//sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
+  sw.setRxBuffer(i2cRxBuffer, sizeof(i2cRxBuffer));
+  //sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
 
-	// HIH61xx doesn't need a TX buffer at all but other I2C devices probably will.
-	//sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
-	sw.setTxBuffer(NULL, 0);
+  // HIH61xx doesn't need a TX buffer at all but other I2C devices probably will.
+  //sw.setTxBuffer(i2cTxBuffer, sizeof(i2cTxBuffer));
+  sw.setTxBuffer(NULL, 0);
 
-	sw.begin();  // Sets up pin mode for SDA and SCL
+  sw.begin();  // Sets up pin mode for SDA and SCL
 
-	hih.initialise();
-	samplingInterval.start(3000, AsyncDelay::MILLIS);
+  hih.initialise();
+  samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
 
 
 bool printed = true;
 void loop(void)
 {
-	if (samplingInterval.isExpired() && !hih.isSampling()) {
-		hih.start();
-		printed = false;
-		samplingInterval.repeat();
-		Serial.println("Sampling started (using SoftWire library)");
-	}
+  if (samplingInterval.isExpired() && !hih.isSampling()) {
+    hih.start();
+    printed = false;
+    samplingInterval.repeat();
+    Serial.println("Sampling started (using SoftWire library)");
+  }
 
-	hih.process();
+  hih.process();
 
-	if (hih.isFinished() && !printed) {
-		printed = true;
-		// Print saved values
-		Serial.print("RH: ");
-		Serial.print(hih.getRelHumidity() / 100.0);
-		Serial.println(" %");
-		Serial.print("Ambient: ");
-		Serial.print(hih.getAmbientTemp() / 100.0);
-		Serial.println(" deg C");
-		Serial.print("Status: ");
-		Serial.println(hih.getStatus());
-	}
+  if (hih.isFinished() && !printed) {
+    printed = true;
+    // Print saved values
+    Serial.print("RH: ");
+    Serial.print(hih.getRelHumidity() / 100.0);
+    Serial.println(" %");
+    Serial.print("Ambient: ");
+    Serial.print(hih.getAmbientTemp() / 100.0);
+    Serial.println(" deg C");
+    Serial.print("Status: ");
+    Serial.println(hih.getStatus());
+  }
 
 }

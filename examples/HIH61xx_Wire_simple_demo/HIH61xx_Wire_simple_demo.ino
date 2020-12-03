@@ -16,34 +16,34 @@ AsyncDelay samplingInterval;
 void setup(void)
 {
 #if F_CPU >= 12000000UL
-    Serial.begin(115200);
+  Serial.begin(115200);
 #else
-	Serial.begin(9600);
+  Serial.begin(9600);
 #endif
 
 
-	Wire.begin();
+  Wire.begin();
 
-	hih.initialise();
-	samplingInterval.start(3000, AsyncDelay::MILLIS);
+  hih.initialise();
+  samplingInterval.start(3000, AsyncDelay::MILLIS);
 }
 
 
 void loop(void)
 {
-    // Instruct the HIH61xx to take a measurement. This blocks until the measurement is ready.
-    hih.read();
+  // Instruct the HIH61xx to take a measurement. This blocks until the measurement is ready.
+  hih.read();
 
-    // Fetch and print the results
-    Serial.print("Relative humidity: ");
-    Serial.print(hih.getRelHumidity() / 100.0);
-    Serial.println(" %");
-    Serial.print("Ambient temperature: ");
-    Serial.print(hih.getAmbientTemp() / 100.0);
-    Serial.println(" deg C");
-    Serial.print("Status: ");
-    Serial.println(hih.getStatus());
+  // Fetch and print the results
+  Serial.print("Relative humidity: ");
+  Serial.print(hih.getRelHumidity() / 100.0);
+  Serial.println(" %");
+  Serial.print("Ambient temperature: ");
+  Serial.print(hih.getAmbientTemp() / 100.0);
+  Serial.println(" deg C");
+  Serial.print("Status: ");
+  Serial.println(hih.getStatus());
 
-    // Wait a second
-    delay(1000);
+  // Wait a second
+  delay(1000);
 }
