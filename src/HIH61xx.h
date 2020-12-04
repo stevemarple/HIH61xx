@@ -1,7 +1,7 @@
 #ifndef HIH61XX_H
 #define HIH61XX_H
 
-#define HIH61XX_VERSION "2.0.2"
+#define HIH61XX_VERSION "3.0.0"
 
 #define HIH61XX_DEFAULT_ADDRESS 0x27
 
